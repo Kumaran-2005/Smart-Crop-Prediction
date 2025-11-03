@@ -115,6 +115,14 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
+    // If Firebase failed to initialize, skip attaching listeners to avoid runtime errors
+    if (!auth) {
+      console.warn('Auth is unavailable; rendering logged-out experience.');
+      setCurrentUser(null);
+      setLoading(false);
+      return () => {};
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
       setLoading(false);
