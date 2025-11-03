@@ -1,0 +1,14 @@
+# Firebase Configuration
+VITE_FIREBASE_API_KEY="AIzaSyCI1F8Dsiq8h1KwkyJQr5nIMyR5Yt80Oms"
+VITE_FIREBASE_AUTH_DOMAIN="crop-prediction-da58d.firebaseapp.com"
+VITE_FIREBASE_PROJECT_ID="crop-prediction-da58d"
+VITE_FIREBASE_STORAGE_BUCKET="crop-prediction-da58d.firebasestorage.app"
+VITE_FIREBASE_MESSAGING_SENDER_ID="798928021067"
+VITE_FIREBASE_APP_ID="1:798928021067:web:af0e170e229d004a3c4fce"
+
+# OpenWeather API
+VITE_OPENWEATHER_API_KEY="d521a849323cd6a30af0f33f2654de52"
+VITE_YOUTUBE_API_KEY="AIzaSyBfC3e1zULHMECv6MuRxx1Nh6stBR6Xnzs"
+
+# Admin Configuration
+VITE_ADMIN_EMAIL="admin@smartcrop.com"
