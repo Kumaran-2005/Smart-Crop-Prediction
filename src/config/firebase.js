@@ -31,4 +31,5 @@ try {
 export { app };
 export { auth };
 export { db };
+export const firebaseReady = !!app;
 export default app;

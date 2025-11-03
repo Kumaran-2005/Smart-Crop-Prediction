@@ -26,7 +26,7 @@ import {
     return result;
   };
 import { doc, setDoc, getDoc, updateDoc, increment, collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db } from '../config/firebase';
+import { auth, db, firebaseReady } from '../config/firebase';
 
 const AuthContext = createContext();
 
@@ -37,7 +37,14 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  const ensureAuth = () => {
+    if (!auth) {
+      throw new Error('Authentication is unavailable. Please configure Firebase for production or try again later.');
+    }
+  };
+
   const signup = async (email, password) => {
+    ensureAuth();
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     
     // Create user document in Firestore
@@ -54,6 +61,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (email, password) => {
+    ensureAuth();
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     
     // Update login count
@@ -64,6 +72,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     setIsAdmin(false);
+    ensureAuth();
     return signOut(auth);
   };
 
@@ -134,6 +143,7 @@ export const AuthProvider = ({ children }) => {
   const value = {
     currentUser,
     isAdmin,
+    authAvailable: !!auth,
     signup,
     login,
     logout,
