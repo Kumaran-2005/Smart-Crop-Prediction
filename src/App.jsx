@@ -58,7 +58,7 @@ const AppContent = () => {
 const App = () => {
   return (
     <AuthProvider>
-      <Router basename={import.meta.env.BASE_URL}>
+      <Router>
         <AppContent />
       </Router>
     </AuthProvider>

@@ -1,30 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
-  signOut, 
-  onAuthStateChanged, 
-  GoogleAuthProvider, 
-  signInWithPopup 
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup,
 } from 'firebase/auth';
-  // Google sign-in
-  const googleLogin = async () => {
-    const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth, provider);
-    // Create user document in Firestore if new user
-    const userRef = doc(db, 'users', result.user.uid);
-    const userSnap = await getDoc(userRef);
-    if (!userSnap.exists()) {
-      await setDoc(userRef, {
-        email: result.user.email,
-        createdAt: new Date(),
-        predictionsCount: 0
-      });
-      await updateUserStats('totalUsers', 1);
-    }
-    await updateUserStats('totalLogins', 1);
-    return result;
-  };
 import { doc, setDoc, getDoc, updateDoc, increment, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, firebaseReady } from '../config/firebase';
 
@@ -36,43 +18,41 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-
   const ensureAuth = () => {
-    if (!auth) {
-      throw new Error('Authentication is unavailable. Please configure Firebase for production or try again later.');
+    if (!firebaseReady || !auth) {
+      throw new Error('Authentication is not available in this environment. Configure Firebase to enable auth.');
     }
   };
 
   const signup = async (email, password) => {
     ensureAuth();
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    
+
     // Create user document in Firestore
-    await setDoc(doc(db, 'users', userCredential.user.uid), {
-      email: email,
-      createdAt: new Date(),
-      predictionsCount: 0
-    });
+    if (db) {
+      await setDoc(doc(db, 'users', userCredential.user.uid), {
+        email: email,
+        createdAt: new Date(),
+        predictionsCount: 0,
+      });
+    }
 
     // Update total users count
     await updateUserStats('totalUsers', 1);
-    
+
     return userCredential;
   };
 
   const login = async (email, password) => {
     ensureAuth();
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    
-    // Update login count
     await updateUserStats('totalLogins', 1);
-    
     return userCredential;
   };
 
   const logout = () => {
     setIsAdmin(false);
-    ensureAuth();
+    if (!firebaseReady || !auth) return Promise.resolve();
     return signOut(auth);
   };
 
@@ -85,37 +65,43 @@ export const AuthProvider = ({ children }) => {
   };
 
   const updateUserStats = async (field, value) => {
+    if (!db) return;
     try {
       const statsRef = doc(db, 'stats', 'general');
       await updateDoc(statsRef, {
-        [field]: increment(value)
+        [field]: increment(value),
       });
     } catch (error) {
       // If document doesn't exist, create it
       const statsRef = doc(db, 'stats', 'general');
-      await setDoc(statsRef, {
-        [field]: value,
-        totalPredictions: 0,
-        totalUsers: 0,
-        totalLogins: 0
-      }, { merge: true });
+      await setDoc(
+        statsRef,
+        {
+          [field]: value,
+          totalPredictions: 0,
+          totalUsers: 0,
+          totalLogins: 0,
+        },
+        { merge: true }
+      );
     }
   };
 
   // Accepts prediction details as argument
   const recordPrediction = async (predictionDetails) => {
     if (currentUser) {
+      if (!db) return;
       // Update user's prediction count
       const userRef = doc(db, 'users', currentUser.uid);
       await updateDoc(userRef, {
-        predictionsCount: increment(1)
+        predictionsCount: increment(1),
       });
 
       // Save prediction details in 'predictions' collection
       await addDoc(collection(db, 'predictions'), {
         userId: currentUser.uid,
         ...predictionDetails,
-        timestamp: serverTimestamp()
+        timestamp: serverTimestamp(),
       });
 
       // Update global prediction count
@@ -123,10 +109,32 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Google login moved inside provider so it has access to auth/db and guards
+  const googleLogin = async () => {
+    ensureAuth();
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
+
+    // Create user document in Firestore if new user
+    if (db) {
+      const userRef = doc(db, 'users', result.user.uid);
+      const userSnap = await getDoc(userRef);
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          email: result.user.email,
+          createdAt: new Date(),
+          predictionsCount: 0,
+        });
+        await updateUserStats('totalUsers', 1);
+      }
+      await updateUserStats('totalLogins', 1);
+    }
+    return result;
+  };
+
   useEffect(() => {
-    // If Firebase failed to initialize, skip attaching listeners to avoid runtime errors
-    if (!auth) {
-      console.warn('Auth is unavailable; rendering logged-out experience.');
+    // If auth isn't initialized, skip listener and render logged-out UI
+    if (!firebaseReady || !auth) {
       setCurrentUser(null);
       setLoading(false);
       return () => {};
@@ -143,13 +151,13 @@ export const AuthProvider = ({ children }) => {
   const value = {
     currentUser,
     isAdmin,
-    authAvailable: !!auth,
+    authAvailable: !!(firebaseReady && auth),
     signup,
     login,
     logout,
     adminLogin,
     recordPrediction,
-    googleLogin
+    googleLogin,
   };
 
   return (

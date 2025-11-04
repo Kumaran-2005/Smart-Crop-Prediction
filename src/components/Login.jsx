@@ -11,13 +11,9 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
-  const { login, signup, googleLogin, authAvailable } = useAuth();
+  const { login, signup, googleLogin } = useAuth();
   const [googleError, setGoogleError] = useState('');
   const handleGoogleLogin = async () => {
-    if (!authAvailable) {
-      setGoogleError('Authentication is not configured for this deployment. Please try again later.');
-      return;
-    }
     setLoading(true);
     setGoogleError('');
     try {
@@ -30,10 +26,6 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!authAvailable) {
-      setError('Authentication is not configured for this deployment. Please try again later.');
-      return;
-    }
     setLoading(true);
     setError('');
 
@@ -99,7 +91,7 @@ const Login = () => {
             <button
               type="button"
               onClick={handleGoogleLogin}
-              disabled={loading || !authAvailable}
+              disabled={loading}
               className="group relative w-full flex justify-center py-3 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mb-2"
             >
               <svg className="h-5 w-5 mr-2" viewBox="0 0 48 48"><g><path fill="#4285F4" d="M24 9.5c3.54 0 6.7 1.22 9.19 3.23l6.85-6.85C36.68 2.36 30.74 0 24 0 14.82 0 6.71 5.13 2.69 12.56l7.98 6.2C12.13 13.09 17.62 9.5 24 9.5z"/><path fill="#34A853" d="M46.1 24.55c0-1.64-.15-3.22-.42-4.74H24v9.01h12.42c-.54 2.9-2.18 5.36-4.65 7.01l7.19 5.6C43.93 37.36 46.1 31.45 46.1 24.55z"/><path fill="#FBBC05" d="M10.67 28.13a14.5 14.5 0 0 1 0-8.26l-7.98-6.2A23.94 23.94 0 0 0 0 24c0 3.77.9 7.34 2.69 10.56l7.98-6.43z"/><path fill="#EA4335" d="M24 48c6.48 0 11.93-2.15 15.9-5.85l-7.19-5.6c-2.01 1.35-4.6 2.15-8.71 2.15-6.38 0-11.87-3.59-14.33-8.83l-7.98 6.43C6.71 42.87 14.82 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></g></svg>
@@ -164,7 +156,7 @@ const Login = () => {
           <div>
             <button
               type="submit"
-              disabled={loading || !authAvailable}
+              disabled={loading}
               className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Sign Up')}

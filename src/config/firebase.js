@@ -14,22 +14,23 @@ const firebaseConfig = {
 let app = null;
 let auth = null;
 let db = null;
+let firebaseReady = false;
 
 try {
-  // Basic sanity: ensure required keys exist to avoid runtime crashes on Pages
+  // Basic sanity check to avoid throwing inside the app if env vars are missing
   if (!firebaseConfig.apiKey || !firebaseConfig.projectId || !firebaseConfig.appId) {
-    throw new Error('Missing Firebase env. Set VITE_FIREBASE_* variables.');
+    throw new Error('Missing Firebase environment variables');
   }
+
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   db = getFirestore(app);
+  firebaseReady = true;
 } catch (e) {
-  // Don’t crash the whole app; log and allow UI to render logged-out experience
-  console.error('Firebase initialization failed:', e);
+  // Log so the developer can see what's wrong in the console, but don't crash the app
+  // eslint-disable-next-line no-console
+  console.warn('Firebase not initialized:', e.message);
 }
 
-export { app };
-export { auth };
-export { db };
-export const firebaseReady = !!app;
+export { app, auth, db, firebaseReady };
 export default app;
