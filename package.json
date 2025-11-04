@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "homepage": "https://your-homepage-url.com",
+  "homepage": "https://github.com/Kumaran-2005/Smart-Crop-Prediction.git",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
